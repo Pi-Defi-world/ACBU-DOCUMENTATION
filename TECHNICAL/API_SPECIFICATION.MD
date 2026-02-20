@@ -2,7 +2,7 @@
 
 ## Overview
 
-The ACBU API provides programmatic access to minting, burning, reserve queries, rate queries, segment-based use cases (P2P, SME, international, salary, enterprise, savings, lending, gateway, bills), and webhook endpoints.
+The ACBU API provides programmatic access to minting, burning, reserve queries, rate queries, segment-based use cases (P2P, SME, international, salary, enterprise, savings, lending, gateway, bills, government, investment), and webhook endpoints. **Deposits:** basket (pool) currencies via **POST /mint/deposit**; **USDC** via **POST /mint/usdc** (we convert USDC→XLM in the backend and mint once conversion succeeds); **XLM** via **POST /onramp/register** (we use pools/swaps in the backend). Pools and swaps run as independent backend services—users do not wait for LPs. **Audience-specific** mint/burn paths: `/retail`, `/business`, `/government` (see [API and Contracts Reference](../PROJECT/API_AND_CONTRACTS_REFERENCE.MD)).
 
 **Base URL:** `https://api.acbu.io/v1`  
 **Authentication:** API Key (Bearer token) or JWT where noted  
@@ -39,43 +39,60 @@ X-RateLimit-Reset: 1640995200
 
 ## Endpoints
 
-### 1. Mint ACBU from USDC
+### 1. Deposit (basket currencies only)
 
-**POST** `/mint/usdc`
+**POST** `/mint/deposit`
 
-Mint ACBU tokens by depositing USDC.
+Deposit in a **basket (pool) currency** only (NGN, KES, RWF, ZAR, GHS, EGP, MAD, TZS, UGX, XOF). USDC and USDT are **not** accepted; for USDC use the on-ramp (see §1b).
 
 **Request Body:**
 ```json
 {
-  "usdc_amount": "1000.00",
-  "wallet_address": "GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  "currency_preference": "auto"
+  "currency": "NGN",
+  "amount": "10000",
+  "wallet_address": "GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 }
 ```
 
-**Response:**
+**Response:** `202` with `transaction_id`, `status: "pending"`, and message to complete payment.
+
+**Status Codes:** `202` - Accepted (pending); `400` - Invalid or forbidden currency; `401` - Unauthorized; `429` - Rate/limit exceeded; `503` - Minting paused (circuit breaker).
+
+### 1b. USDC deposit (we convert in backend, then mint)
+
+**POST** `/mint/usdc`
+
+Accept a **USDC deposit**. We convert USDC→XLM in the backend (pools/swaps run independently); once conversion succeeds, we approve the mint and credit the user's wallet. The user does not wait for LPs or swap services.
+
+**Request Body:**
 ```json
 {
-  "transaction_id": "tx_abc123",
-  "acbu_amount": "1176.47",
-  "usdc_amount": "1000.00",
-  "fee": "3.53",
-  "rate": {
-    "acbu_usd": "0.85",
-    "timestamp": "2026-01-26T12:00:00Z"
-  },
-  "status": "pending",
-  "estimated_completion": "2026-01-26T12:00:05Z"
+  "usdc_amount": "100.00",
+  "wallet_address": "GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 }
 ```
 
-**Status Codes:**
-- `200` - Success
-- `400` - Invalid request
-- `401` - Unauthorized
-- `429` - Rate limit exceeded
-- `500` - Server error
+**Response:** `202` with `on_ramp_swap_id`, `status: "pending_convert"`, and message that we will convert and mint.
+
+**Status Codes:** `202` - Accepted (pending); `400` - Invalid request; `401` - Unauthorized; `503` - Minting paused (circuit breaker).
+
+### 1c. XLM deposit (on-ramp register)
+
+**POST** `/onramp/register`
+
+Register a **XLM deposit**. User sends or has sent XLM; we use backend pools/swaps and mint ACBU to the user's wallet.
+
+**Request Body:**
+```json
+{
+  "stellar_address": "GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  "xlm_amount": "100.5",
+  "usdc_amount": "20.00"
+}
+```
+`usdc_amount` is optional (equivalent value for accounting).
+
+**Response:** `202` with `on_ramp_swap_id`, `status: "pending_convert"`.
 
 ### 2. Burn ACBU for Fiat
 

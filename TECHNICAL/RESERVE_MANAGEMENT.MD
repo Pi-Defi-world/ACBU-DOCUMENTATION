@@ -80,6 +80,27 @@ Reserve distribution matches user base:
 
 **Natural Balance:** ✓ Both reserves growing proportionally, no major rebalancing needed
 
+## Deposit rule: pool (basket) currencies and USDC/XLM
+
+- **Basket (pool) only in reserves:** Only **basket currencies** (NGN, KES, RWF, ZAR, GHS, EGP, MAD, TZS, UGX, XOF, etc.) are held in the pool. **No USDC and no USDT** are held in the pool.
+- **User deposits:** Users can deposit **basket currency** (POST /mint/deposit), **USDC** (POST /mint/usdc), or **XLM** (POST /onramp/register). For USDC we convert USDC→XLM in the backend; once conversion succeeds we approve the mint. For XLM we use backend pools/swaps and mint. Pools (e.g. ACBU/XLM or P2P) and swap services run as **independent** backend processes—users do not wait for them.
+- **API:** POST /mint/deposit accepts only basket currency. POST /mint/usdc accepts USDC (we convert then mint). POST /onramp/register accepts XLM deposit (we process and mint).
+
+## USDC and XLM flows (backend conversion and jobs)
+
+1. **USDC deposit (POST /mint/usdc):** User deposits USDC to us. Backend job converts USDC→XLM (via our LP/swap service, which runs independently). Once conversion succeeds, we mint ACBU to the user's wallet. User does not wait for LPs.
+2. **XLM deposit (POST /onramp/register):** User deposits XLM. Backend job sells XLM (or uses equivalent value) and mints ACBU to the user. We may use ACBU/XLM LP or P2P in the backend; these run independently.
+3. **Smart contracts:** ACBU mint/burn and savings use on-chain smart contracts (acbu_minting, acbu_burning, acbu_savings_vault, etc.). USDC/XLM and ACBU/XLM liquidity and swaps can be **backend-only** (custody + swap APIs or our own P2P); no new smart contracts are required for those. On-chain AMM contracts can be added later if we want on-chain liquidity.
+
+## Reserve segments (quarters)
+
+Reserves are tracked in two segments:
+
+- **Transactions quarter:** Backs current mint/burn and P2P activity (1:1 backing for circulating ACBU). Updated by mint, burn, and rebalancing. Reserve health and overcollateralization use this segment by default.
+- **Investment/savings quarter:** Allocated to savings vault and investment products. Updated by savings/investment flows; not used for same-day transaction redemptions.
+
+Reporting and dashboard can show both segments. Movement between segments is defined in ops docs.
+
 ## Reserve Health Monitoring
 
 **Daily Checks:**

@@ -13,7 +13,9 @@ The current layout is **smart-contract-first** and **segment-based**:
 - **Segments:** Routes are grouped by use case (p2p, sme, international, salary, enterprise, savings, lending, gateway, bills). Each segment is protected by `requireSegmentScope`, so API keys must have the right permissions (e.g. `p2p:read`, `p2p:write`).
 - **Access:** User/organization model supports `actorType` (retail, sme, enterprise, merchant) and `tier` (free, verified, sme, enterprise). ApiKey can be user- or organization-scoped with a `permissions` array for segment scopes.
 
-**Strengths:** Clear separation of protocols vs backend; one service per contract; event queues per contract; segment routes make product boundaries explicit. **To improve:** Add rate limits per tier, enforce tier in segment middleware where needed, and complete stub controllers (salary, enterprise, bills) with real logic.
+**Strengths:** Clear separation of protocols vs backend; one service per contract; event queues per contract; segment routes make product boundaries explicit. **To improve:** Complete stub controllers (salary, enterprise, bills) with real logic.
+
+**Audience:** Everyday users use **retail** paths (`/retail/mint/deposit`, `/retail/burn/acbu`) or core `/mint/deposit`, `/burn/acbu`. Businesses use **business** paths with sme/enterprise scope. Governments use **government** paths with government scope. Limits and fees vary by audience (see [Limits and Tiers](../OPERATIONS/LIMITS_AND_TIERS.MD)).
 
 ---
 
@@ -39,8 +41,10 @@ Prefix: `/{apiVersion}` (e.g. `/v1`). Auth: API key in `Authorization: Bearer <k
 | POST | `/reserves/track` | Trigger reserve tracking |
 | GET | `/rates` | ACBU exchange rates |
 | GET | `/rates/quote` | Quote for amount and optional currency |
-| POST | `/mint/usdc` | Mint ACBU from USDC |
+| POST | `/mint/usdc` | USDC deposit: we convert USDC→XLM in backend, then mint (API key required) |
+| POST | `/mint/deposit` | Deposit in basket currency only (NGN, KES, …); rejects USDC/USDT |
 | POST | `/burn/acbu` | Burn ACBU for fiat |
+| POST | `/onramp/register` | XLM deposit: register XLM; backend job mints ACBU to user (API key required) |
 | POST | `/transfers` | Create P2P transfer |
 | GET | `/transfers` | List transfers |
 | GET | `/transfers/:id` | Get transfer by id |
@@ -60,6 +64,21 @@ Prefix: `/{apiVersion}` (e.g. `/v1`). Auth: API key in `Authorization: Bearer <k
 | GET | `/kyc/validator/tasks`, `/kyc/validator/me` | Validator tasks / me |
 | POST | `/kyc/validator/tasks/:id` | Submit validation result |
 | POST | `/recovery/unlock` | Account recovery (no API key) |
+
+### 2.2a Audience-specific mint/burn and deposit rule
+
+- **Deposit rule (basket):** Only **basket (pool) currencies** may be deposited into the pool (NGN, KES, RWF, ZAR, GHS, EGP, MAD, TZS, UGX, XOF). Use **POST /mint/deposit** with `currency` and `amount` (basket only).
+- **USDC and XLM deposits:** Users can deposit **USDC** via **POST /mint/usdc** (usdc_amount, wallet_address) or **XLM** via **POST /onramp/register** (stellar_address, xlm_amount). We run USDC→XLM conversion and/or ACBU/XLM pools and swap services in the backend; these run independently. The mint is approved once we have successfully converted USDC to XLM (for USDC deposits). Users do not wait for LPs or P2P markets.
+- **Audience paths:** Mint and burn are also exposed per audience with shared behaviour and per-audience limits:
+
+| Audience   | Scope / gate        | Mint (deposit)              | Burn                    |
+|-----------|----------------------|-----------------------------|--------------------------|
+| Retail    | API key (no segment) | POST `/retail/mint/deposit` | POST `/retail/burn/acbu` |
+| Business  | sme:write or enterprise:write | POST `/business/mint/deposit` | POST `/business/burn/acbu` |
+| Government| government:read/write| POST `/government/mint/deposit` | POST `/government/burn/acbu` |
+
+- **POST /retail/mint/usdc**, **POST /business/mint/usdc**, **POST /government/mint/usdc** accept USDC deposit (same as core **POST /mint/usdc**); we convert in backend and mint.
+- Government-only: GET `/government/treasury`, GET `/government/statements`.
 
 ### 2.3 Segment routes (API key + segment scope)
 
@@ -83,8 +102,13 @@ Each segment requires one of the listed scopes (e.g. `p2p:read` or `p2p:write`).
 | **Enterprise** | enterprise:read, enterprise:write | POST | `/enterprise/bulk-transfer` | Bulk transfer (stub) |
 | | | GET | `/enterprise/treasury` | Treasury view (stub) |
 | **Savings** | savings:read, savings:write | POST | `/savings/deposit` | Deposit into vault |
-| | | POST | `/savings/withdraw` | Withdraw from vault |
+| | | POST | `/savings/withdraw` | Withdraw from vault (blocked on monthly lock dates) |
 | | | GET | `/savings/positions` | Positions (balance by user/term) |
+| | | GET | `/savings/next-withdrawal-date` | Next date withdrawals are allowed |
+| **Investment** | investment:read, investment:write | POST | `/investment/withdraw/request` | Request withdrawal (24h + notification; business: calendar or 1% forced) |
+| | | GET | `/investment/withdraw/requests` | List withdrawal requests |
+| **Government** | government:read, government:write | GET | `/government/treasury` | Treasury view |
+| | | GET | `/government/statements` | Statements |
 | **Lending** | lending:read, lending:write | POST | `/lending/deposit` | Deposit to pool |
 | | | POST | `/lending/withdraw` | Withdraw from pool |
 | | | GET | `/lending/balance` | Lender balance |
@@ -116,6 +140,8 @@ API key `permissions` is a JSON array of strings. For segment routes, at least o
 | lending:read, lending:write | Lending |
 | bills:read, bills:write | Bills |
 | gateway:read, gateway:write | Merchant gateway |
+| government:read, government:write | Government |
+| investment:read, investment:write | Investment withdrawal |
 
 ---
 
@@ -134,6 +160,8 @@ All contracts are Soroban (Stellar); crate names and backend services use the na
 | 7 | acbu_escrow | Hold ACBU; release/refund | acbuEscrow.service.ts / acbuEscrowService | CONTRACT_ESCROW |
 
 Optional (Stage 3+): **acbu_rebalancing** for on-chain weight proposals/execution.
+
+**Do we need smart contracts for USDC/XLM or ACBU/XLM pools?** ACBU mint, burn, and savings flows use the smart contracts above. USDC/XLM conversion and ACBU/XLM liquidity (or P2P) can be **backend-only** (custody + swap APIs or our own P2P); no new smart contracts are required. On-chain AMM (e.g. Stellar AMM) can be added later if we want on-chain liquidity.
 
 ### 4.1 Contract events and backend queues
 
