@@ -50,6 +50,7 @@ ACBU is a stablecoin backed by a basket of African currencies, designed to addre
 - **[Task Breakdown](PROJECT/TASK_BREAKDOWN.MD)** - Detailed task breakdown for all stages
 - **[Milestones](PROJECT/MILESTONES.MD)** - Key project milestones with acceptance criteria
 - **[Resource Plan](PROJECT/RESOURCE_PLAN.MD)** - Team composition, budget, and resource allocation
+- **Known issues:** [Contracts](CONTRACTS_ISSUES.md), [Backend](BACKEND_ISSUES.md), [Frontend](FRONTEND_ISSUES.md)
 
 ## Quick Start
 
