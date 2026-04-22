@@ -98,6 +98,8 @@ The app uses **Prisma Accelerate** for the primary database (managed PostgreSQL;
 
 Or per network: `CONTRACT_ORACLE_TESTNET`, `CONTRACT_ORACLE_MAINNET`, etc.
 
+**Custodial demo-fiat MVP:** demo basket tokens must be custodied on the **minting contract**; the backend calls `mint_from_demo_fiat` and `admin_drip_demo_fiat`. After deploy, follow [TESTNET_CUSTODIAL_BOOTSTRAP.md](./TESTNET_CUSTODIAL_BOOTSTRAP.md) to seed oracle rates, `s_token` map, reserves, and mint demo supply to the minter contract id.
+
 ## Oracle (40/40/20: central bank, fintech, forex)
 
 | Variable | Default | Description |
