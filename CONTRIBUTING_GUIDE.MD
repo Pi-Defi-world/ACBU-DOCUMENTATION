@@ -7,6 +7,7 @@ Thank you for your interest in contributing to ACBU! This guide outlines the pro
 ## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
+- [Ways to Contribute](#ways-to-contribute)
 - [Project Structure](#project-structure)
 - [How to Report Issues](#how-to-report-issues)
 - [How to Submit Changes](#how-to-submit-changes)
@@ -34,6 +35,20 @@ All contributors are expected to:
 - Prioritize the project's mission of financial inclusion across Africa
 
 Violations may result in removal from the project at the maintainers' discretion.
+
+---
+
+## Ways to Contribute
+
+You don't need to be a blockchain expert to help.
+
+| Area | How to Help |
+| :--- | :--- |
+| 📝 **Documentation** | Fix typos, improve clarity, add diagrams, translate into French/Swahili/Portuguese/Arabic |
+| 🐛 **Bug Reports** | Report issues, provide reproduction steps, test fixes |
+| 💻 **Code** | Backend APIs, smart contracts, frontend components, CI/CD |
+| 🧪 **Testing & QA** | Write unit/integration tests, manual testnet testing, security bounties |
+| 🌍 **Community** | Answer questions, write tutorials, spread the word in African dev communities |
 
 ---
 
@@ -429,6 +444,7 @@ Closes #<issue-number>
 - Are inputs validated before use?
 - Are secrets handled safely (no logging, no client-side storage)?
 - Are there any IDOR / authorization bypass vectors?
+- Does webhook signature verification fail closed (reject unverified payloads) rather than fail open? See [webhook verification issue](ISSUES.md#high) for context.
 
 **Correctness:**
 - Does the code do what it claims to do?
@@ -488,6 +504,6 @@ Start with **Critical** severity items — these involve loss of funds, auth byp
 
 ---
 
-**Last Updated:** June 16, 2026
-**Version:** 1.0
+**Last Updated:** June 18, 2026
+**Version:** 1.1
 **Status:** Approved
