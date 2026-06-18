@@ -182,10 +182,11 @@ See the `PROJECT/` directory for:
 
 ## Getting Started
 
-1. **For Developers:** See [STAGES.MD](STAGES.MD) for technical roadmap
-2. **For Business:** See [Business Model](BUSINESS/BUSINESS_MODEL.MD) for commercial details
-3. **For Partners:** See [Fintech Partnerships](OPERATIONS/FINTECH_PARTNERSHIPS.MD) for partnership opportunities
-4. **For Users:** See [User Flows](USER_EXPERIENCE/USER_FLOWS.MD) for how to use ACBU
+1. **For Contributors:** See [CONTRIBUTING_GUIDE.MD](CONTRIBUTING_GUIDE.MD) for how to contribute
+2. **For Developers:** See [STAGES.MD](STAGES.MD) for technical roadmap
+3. **For Business:** See [Business Model](BUSINESS/BUSINESS_MODEL.MD) for commercial details
+4. **For Partners:** See [Fintech Partnerships](OPERATIONS/FINTECH_PARTNERSHIPS.MD) for partnership opportunities
+5. **For Users:** See [User Flows](USER_EXPERIENCE/USER_FLOWS.MD) for how to use ACBU
 
 ---
 
