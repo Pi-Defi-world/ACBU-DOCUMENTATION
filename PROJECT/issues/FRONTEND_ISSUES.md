@@ -82,16 +82,16 @@ This document is the **single, durable long-form reference** for known issues in
 | F-063 | 🟠 High | frontend/config | Environment base URL misconfiguration footgun |
 | F-064 | 🟡 Medium | frontend/security | No Content-Security-Policy for Next app |
 | F-065 | 🟢 Low | frontend/security | No Subresource Integrity for third-party scripts (if any) |
-| F-066 | 🟡 Medium | frontend/components | Inconsistent loading / empty state skeletons across pages |
-| F-071 | 🟡 Medium | frontend/ux | Toast removal delay is ~17 minutes |
 | F-076 | 🟠 High | frontend/api | Frontend request() helper has no default timeout |
+| F-066 | 🟡 Medium | frontend/components | Inconsistent loading / empty state skeletons across pages |
 | F-067 | 🟡 Medium | frontend/forms | Contact inputs have no maxLength |
 | F-068 | 🟡 Medium | frontend/forms | Profile inputs have no maxLength or format validation |
+| F-071 | 🟡 Medium | frontend/ux | Toast removal delay is ~17 minutes |
+| F-074 | 🟡 Medium | frontend/auth | Silent username normalization on signup |
 | F-069 | 🟢 Low | frontend/perf | Icons recreated each render |
 | F-070 | 🟢 Low | frontend/nav | Menu items use router.push instead of Link |
 | F-072 | 🟢 Low | frontend/compat | Mobile detection treats "unknown" as desktop |
 | F-073 | 🟢 Low | frontend/hygiene | Post-KYC upload navigation uses uncleaned setTimeout |
-| F-074 | 🟡 Medium | frontend/auth | Silent username normalization on signup |
 | F-075 | 🟢 Low | frontend/ux | Auto-fill heuristic requires length >= 56 |
 | F-077 | 🟢 Low | frontend/nav | /p2p route is client-side redirect only |
 
