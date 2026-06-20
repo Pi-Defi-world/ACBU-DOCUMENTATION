@@ -283,3 +283,517 @@ Nav can be role/tier-based: show only segments the user’s API key (or role) ca
 - **Lists:** Use query params for filters/pagination if backend supports them; otherwise client-side filter.
 
 This map is the single source for “what to build” for the frontend; implementation should follow the [Frontend & UI/UX Guide](FRONTEND_AND_UI.md) for look and feel.
+
+
+---
+
+## 23. Dashboard & Home page
+
+**Purpose:** User entry point post-login. Shows quick stats, recent activity, and navigation shortcuts.
+
+| Component | Purpose | Details |
+|-----------|---------|---------|
+| `DashboardLayout` | Main container | Header + sidebar + main content area. |
+| `BalanceSummary` | Display balance | Total ACBU balance in primary currency. Show equivalent in USD if applicable. |
+| `RecentActivityList` | Last 5-10 txs | Mint, burn, transfer, savings deposit/withdraw. Paginated or "view all" link. |
+| `QuickActionBar` | CTAs | Send, Mint, Burn, Deposit (savings), Withdraw. Toggle based on user scope. |
+| `ExchangeRateWidget` | Live rates | ACBU/USD and basket. Auto-refresh or manual. |
+| `PortfolioBreakdown` | Holdings | If user has savings/lending positions, show breakdown. |
+| `UpcomingMaturities` | Savings/lending | Show next maturity dates if relevant. |
+
+**User flow:**
+1. Sign in → Dashboard
+2. Tap quick action → relevant page (Send, Mint, etc.)
+3. Or navigate via sidebar to other sections.
+
+---
+
+## 24. Component library & design tokens
+
+All components should follow a unified design language. Reference [FRONTEND_AND_UI.md](FRONTEND_AND_UI.md) for:
+
+- **Color palette:** Primary (brand), secondary, success, warning, error, neutral grays.
+- **Typography:** Headings (H1–H4), body, labels, captions. Font sizes and weights.
+- **Spacing:** 4px, 8px, 16px, 24px, 32px grid.
+- **Borders & radius:** 4px, 8px, 12px for standard corners.
+- **Shadows:** Elevation levels (none, low, medium, high).
+- **Icons:** Consistent icon set (e.g. Feather, Material, custom).
+
+**Component conventions:**
+- Prefix all components: `Acbu*` or match project naming.
+- Props: `className`, `isLoading`, `isDisabled`, `error`, `success`.
+- Events: `onChange`, `onSubmit`, `onCancel`, `onDelete`.
+- Accessibility: ARIA labels, semantic HTML, keyboard navigation.
+
+---
+
+## 25. Forms & validation
+
+| Pattern | Implementation |
+|---------|-----------------|
+| **Text input** | Controlled component; debounce if calling API (e.g. resolve recipient). |
+| **Amount input** | Validate: >= 0, max decimals, max amount (if limit exists). Show error inline. |
+| **Select/dropdown** | Options fetched from backend or static. Searchable if >5 items. |
+| **Checkbox** | Single or multi-select. Use for terms acceptance, filters. |
+| **Radio** | Single choice from list. Use for burn recipient options, etc. |
+| **File upload** | Accept image/PDF per KYC doc type. Show preview. Validate size before upload. |
+| **OTP input** | 6-digit auto-focus and auto-submit on complete. |
+| **Multi-step form** | Wizard: step indicator, "back" button, validate before "next". |
+
+**Error handling:**
+- Show error text below field in red. Persist until corrected.
+- Highlight input border in error color.
+- Disable submit button if form has errors.
+- Show success toast after successful submit.
+
+---
+
+## 26. Modals & overlays
+
+| Use case | Component | Behavior |
+|----------|-----------|----------|
+| **Confirmation** | `ConfirmModal` | Title, message, "Cancel" + "Confirm" buttons. Red CTA for destructive actions. |
+| **Error** | `ErrorModal` or `ErrorBanner` | Show error title and description. "Dismiss" or "Retry" button. |
+| **Loading** | `LoadingOverlay` | Spinner + optional message. Prevent interaction until complete. |
+| **Form modal** | `FormModal` | Embed form inside modal. "Save" + "Cancel". Close on ESC or backdrop click. |
+| **Drawer** | `SideDrawer` | For larger content (e.g. contact edit, batch preview). Slide from right/left. |
+
+---
+
+## 27. Notifications & feedback
+
+| Type | When | Example |
+|------|------|---------|
+| **Toast (success)** | Action completed | "Transfer sent successfully." |
+| **Toast (error)** | Action failed | "Insufficient balance. Please mint more ACBU." |
+| **Toast (info)** | FYI | "Exchange rate updated." |
+| **In-line error** | Form validation | Red text under input field. |
+| **Banner** | Page-level warning | "KYC under review. Limits reduced." |
+| **Skeleton** | Loading data | Gray placeholder shapes while fetching. |
+
+**Duration:**
+- Success toasts: 3–4 seconds.
+- Error toasts: Persist until dismissed or 6 seconds.
+- Banners: Persist until dismissed.
+
+---
+
+## 28. Navigation & routing
+
+**Route structure (React Router example):**
+
+```
+/
+├── /auth
+│   ├── /signin
+│   └── /recovery
+├── /dashboard (protected)
+│   ├── / (home)
+│   ├── /profile
+│   ├── /settings
+│   │   ├── /receive
+│   │   ├── /contacts
+│   │   ├── /guardians
+│   │   └── /security
+│   ├── /kyc
+│   │   ├── /start
+│   │   ├── /applications
+│   │   ├── /applications/:id
+│   │   └── /upload
+│   ├── /validator (if role = validator)
+│   │   ├── /tasks
+│   │   └── /tasks/:id
+│   ├── /transfers
+│   │   ├── /send
+│   │   ├── /history
+│   │   └── /:id
+│   ├── /transactions
+│   │   ├── / (list)
+│   │   └── /:id
+│   ├── /mint
+│   ├── /burn
+│   ├── /rates
+│   ├── /reserves
+│   ├── /p2p (if scope p2p:read)
+│   │   ├── /send
+│   │   ├── /history
+│   │   └── /:id
+│   ├── /international (if scope international:read)
+│   │   ├── /quote
+│   │   ├── /mint
+│   │   └── /withdraw
+│   ├── /sme (if role SME)
+│   │   ├── /send
+│   │   ├── /transfers
+│   │   ├── /statements
+│   │   └── /:id
+│   ├── /salary (if scope salary:write)
+│   │   ├── /disburse
+│   │   ├── /schedule
+│   │   └── /batches
+│   ├── /enterprise (if role Enterprise)
+│   │   ├── /bulk-transfer
+│   │   └── /treasury
+│   ├── /savings
+│   │   ├── / (positions)
+│   │   ├── /deposit
+│   │   └── /withdraw
+│   ├── /lending
+│   │   ├── / (balance)
+│   │   ├── /deposit
+│   │   └── /withdraw
+│   ├── /gateway (if role Merchant)
+│   │   ├── /create-charge
+│   │   └── /manage
+│   └── /bills
+│       ├── /catalog
+│       └── /pay
+└── /error (optional catch-all for 404, 500, etc.)
+```
+
+**Route guards:**
+- All `/dashboard/*` routes require authentication.
+- Segment routes (e.g. `/p2p`, `/sme`) check user scope and redirect to dashboard if denied.
+- Validator routes check if user has validator role.
+
+---
+
+## 29. State management
+
+**Recommended approach:**
+
+- **Auth state:** Token, user profile, scopes. Use context or Redux.
+- **UI state:** Loading, error messages, modals. Use local state or Zustand.
+- **Data fetching:** React Query (TanStack Query) for caching and sync.
+- **Form state:** React Hook Form + Zod/Yup for validation.
+
+**Example pattern:**
+```javascript
+// Auth context
+const AuthContext = React.createContext();
+
+// Dashboard page
+function Dashboard() {
+  const { user, token } = useContext(AuthContext);
+  const { data: balance, isLoading } = useQuery(
+    ['balance'],
+    () => fetchBalance(token),
+    { staleTime: 60 * 1000 }
+  );
+  // ...
+}
+```
+
+---
+
+## 30. API integration
+
+**Base URL:** `https://api.acbu.app/v1` (or test endpoint for dev).
+
+**Headers:**
+```javascript
+{
+  'Authorization': `Bearer ${token}`,
+  'Content-Type': 'application/json',
+  'X-Request-ID': generateUUID() // optional, for tracing
+}
+```
+
+**Handling responses:**
+- 2xx: Success. Return data.
+- 4xx: Client error. Show user-friendly message from backend error.message.
+- 5xx: Server error. Show "Something went wrong" + retry option.
+
+**Rate limiting:**
+- Check `X-RateLimit-*` headers if returned.
+- Show toast if rate limited: "Too many requests. Please try again in X seconds."
+
+---
+
+## 31. Security & best practices
+
+| Area | Practice |
+|------|----------|
+| **Token storage** | Store in secure httpOnly cookie or secure storage (not localStorage if possible). |
+| **CSRF** | Use CSRF tokens if backend requires. Send in headers or hidden form fields. |
+| **XSS prevention** | Sanitize user input before display. Use DOMPurify or framework escaping. |
+| **API calls** | Use HTTPS only. Validate SSL certificates. |
+| **Sensitive data** | Never log API keys, tokens, or PII. Use redaction in logs. |
+| **Password fields** | Use `type="password"`. Mask input. No autocomplete for sensitive fields unless necessary. |
+| **2FA** | OTP input masking. No copy/paste if possible (but allow if UX demands). |
+
+---
+
+## 32. Accessibility (WCAG 2.1 AA)
+
+| Requirement | Implementation |
+|-------------|-----------------|
+| **Semantic HTML** | Use `<button>`, `<form>`, `<label>`, `<input>`, etc. Avoid `<div>` for interactive elements. |
+| **ARIA labels** | Add `aria-label` to icons, icon-only buttons. Use `aria-describedby` for error text. |
+| **Keyboard navigation** | Tab order logical. Focus visible (outline). Trap focus in modals. |
+| **Color contrast** | Text: 4.5:1 (normal), 3:1 (large). Icons: 3:1 if meaningful. |
+| **Alt text** | Images used for content (not decoration) have alt text. |
+| **Form labels** | All inputs have `<label>` with `for` or wrapped input. |
+| **Error messages** | Associated with input via `aria-describedby`. |
+| **Loading states** | Use `aria-busy` or `aria-live` region for dynamic updates. |
+| **Skip links** | Optional: skip to main content link for keyboard users. |
+
+---
+
+## 33. Performance & optimization
+
+| Technique | Why |
+|-----------|-----|
+| **Code splitting** | Load route-specific bundles on demand. Reduces initial load. |
+| **Image optimization** | Compress, use WebP, lazy load below fold. |
+| **Caching** | Use React Query cache + localStorage for rarely-changing data. |
+| **Debouncing** | Recipient search, rate quote input to reduce API calls. |
+| **Memoization** | Memoize expensive components (e.g. large lists) with `React.memo`. |
+| **Tree shaking** | Import only what's needed (e.g. specific lodash functions). |
+| **Minification & compression** | gzip/brotli compression on server. Minify JS/CSS. |
+
+**Metrics to monitor:**
+- Core Web Vitals: LCP (<2.5s), FID (<100ms), CLS (<0.1).
+- Time to Interactive (TTI).
+- Lighthouse score (target: >85).
+
+---
+
+## 34. Testing strategy
+
+| Layer | Tools | Examples |
+|-------|-------|----------|
+| **Unit** | Jest, React Testing Library | Component rendering, form validation, utility functions. |
+| **Integration** | React Testing Library, MSW | Form submission flow, data fetching, API mocking. |
+| **E2E** | Cypress or Playwright | Full user journeys: sign in → transfer → confirm. |
+| **Visual** | Percy, Chromatic | Screenshot regression testing. |
+| **Accessibility** | axe, jest-axe | Automated a11y checks in unit/integration tests. |
+
+**Coverage target:** >80% for critical paths (auth, transactions, KYC).
+
+---
+
+## 35. Error scenarios & edge cases
+
+| Scenario | Handling |
+|----------|----------|
+| **No internet** | Show banner: "No connection." Retry button. Auto-retry when online. |
+| **API down** | Show error: "Service unavailable. Try again later." |
+| **Auth expired** | Redirect to sign-in. Offer to re-authenticate. |
+| **Insufficient balance** | On mint/burn/transfer form: show error + link to mint/burn. |
+| **Rate limit hit** | Show countdown timer. Disable submit button until reset. |
+| **File upload failed** | Show error reason (e.g. "File too large"). Retry option. |
+| **Form timeout** | After 5 mins: show "Session expired" + offer to retry. |
+| **Invalid recipient** | Show error: "Recipient not found." Suggest search. |
+| **KYC rejected** | Show reason (if provided by backend). Link to reapply or support. |
+| **Empty lists** | Show empty state illustration + CTA (e.g. "No transfers yet. Send one now."). |
+
+---
+
+## 36. Onboarding flow
+
+**First-time user:**
+1. Sign in → Dashboard (empty or with info banner).
+2. Prompt: "Welcome to ACBU! Next step: Complete KYC."
+3. Link to KYC start page.
+4. After KYC approved: Prompt to mint ACBU.
+5. After mint: Show tutorial or guide to send/receive/savings.
+
+**Optional tutorial pages:**
+- "What is ACBU?" (brief explanation, rationale).
+- "How to receive" (show address, QR, memo).
+- "How to send" (fill form, confirm, done).
+- "Savings explained" (terms, yield, withdrawal).
+
+**Suggested components:**
+- `OnboardingBanner` (dismissible).
+- `TutorialStep` (step indicator + content + buttons).
+- `InfoTooltip` (hover/click for more context).
+
+---
+
+## 37. Mobile-first considerations
+
+*See also [MOBILE_FIRST_REFACTOR.md](MOBILE_FIRST_REFACTOR.md) and [MOBILE_OPTIMIZATION_COMPLETE.md](MOBILE_OPTIMIZATION_COMPLETE.md).*
+
+| Issue | Solution |
+|-------|----------|
+| **Small screens** | Stack vertically. Use full width for inputs. Collapse nav to hamburger. |
+| **Touch targets** | Buttons ≥44x44px. Spacing between taps ≥8px. |
+| **Scrolling** | Long forms: break into steps or expandable sections. Modals: full-height on mobile. |
+| **Copy-paste** | QR code for Stellar addresses. One-tap copy buttons. |
+| **Keyboard** | Virtual keyboard on mobile: use `type="tel"` for amounts, `type="email"` for emails. |
+| **Offline** | Cache last state. Show "offline" banner. Queue actions if connectivity returns. |
+| **Performance** | Lazy load images. Limit animations. Use system fonts. |
+
+---
+
+## 38. Internationalization (i18n)
+
+**Approach:** Use i18next or similar.
+
+**Key areas:**
+- **UI text:** All labels, buttons, messages translated.
+- **Dates/times:** Locale-aware formatting (e.g. DD/MM/YYYY vs MM/DD/YYYY).
+- **Numbers:** Decimal separators, thousands grouping.
+- **Currency:** Display ACBU, USD, GHS, etc. with local formatting.
+- **RTL:** If supporting Arabic, Amharic, etc., mirror layout.
+
+**Language files structure:**
+```
+/locales
+├── en.json
+├── es.json
+├── fr.json
+└── am.json
+```
+
+**Usage:**
+```javascript
+import { useTranslation } from 'i18next';
+
+function SendForm() {
+  const { t } = useTranslation();
+  return <label>{t('send.recipientLabel')}</label>;
+}
+```
+
+---
+
+## 39. Analytics & monitoring
+
+**Recommended tools:** Mixpanel, Amplitude, or custom backend.
+
+| Event | Tracking |
+|-------|----------|
+| **User sign-in** | Success, failure reason. |
+| **KYC submission** | Started, completed, rejected. |
+| **Mint/Burn** | Amount, currency, success/failure. |
+| **Transfer sent** | Recipient type (alias/address), amount, success/failure. |
+| **Savings deposit** | Term, amount, success/failure. |
+| **Page view** | Route, time spent. |
+| **Error** | Error code, page context, user action. |
+
+**Goals:**
+- Track funnel completion (sign-up → KYC → first mint → first transfer).
+- Identify drop-off points.
+- Monitor error rates.
+- Measure feature adoption (e.g. savings vs lending vs P2P).
+
+---
+
+## 40. Deployment & environments
+
+| Environment | Purpose | URL |
+|-------------|---------|-----|
+| **Development** | Local dev & feature branches. | `localhost:3000` |
+| **Staging** | QA & pre-production testing. | `staging.acbu.app` |
+| **Production** | Live user-facing app. | `app.acbu.app` |
+
+**Deployment checklist:**
+- [ ] All tests passing.
+- [ ] No console errors or warnings.
+- [ ] Lighthouse score >85.
+- [ ] Accessibility audit passed.
+- [ ] Environment variables set correctly.
+- [ ] API endpoints verified for environment.
+- [ ] Error logging configured.
+- [ ] Analytics events firing.
+- [ ] Performance monitoring active.
+
+**Rollback plan:**
+- Keep previous version deployed or in registry.
+- If critical bug detected, revert to last stable version.
+- Use feature flags for gradual rollouts.
+
+---
+
+## 41. Known gaps & next steps
+
+**Partially implemented:**
+- ✅ Auth (signin, 2FA, signout).
+- ✅ User profile & settings.
+- ✅ KYC flow (basic).
+- ✅ Mint & burn (core).
+- ✅ P2P transfers.
+- ✅ Rates & reserves.
+- ⚠️ Savings (vault contract exists; UI needs implementation).
+- ⚠️ Lending (pool contract exists; UI needs implementation).
+- ⚠️ Salary (backend stub; disburse/schedule UI needed).
+- ⚠️ Enterprise (backend stub; bulk transfer + treasury UI needed).
+- ⚠️ Gateway (escrow implemented; charge UI needs testing).
+- ⚠️ Bills (backend stub; catalog + pay UI needed).
+- ⚠️ Validator KYC (backend implemented; task queue UI needs work).
+
+**Next priorities:**
+1. **Savings & Lending UX:** Finalize deposit/withdraw flows. Test with contracts.
+2. **Validator dashboard:** Implement task queue, document viewer, approval workflow.
+3. **SME & International:** Build segment-specific dashboards and routing.
+4. **Merchant gateway:** Test charge creation and release/refund flows.
+5. **Mobile optimization:** Conduct mobile QA. Optimize performance on 3G.
+6. **Analytics:** Deploy event tracking. Analyze user funnels.
+7. **Accessibility:** Full WCAG 2.1 AA audit with assistive tech testing.
+8. **Documentation:** Keep this map up-to-date as features launch.
+
+---
+
+## 42. Maintenance & versioning
+
+**Frontend versioning:** Semantic versioning (e.g. 1.0.0, 1.1.0, 2.0.0).
+
+**Release cycle:**
+- **Patch (1.0.x):** Bug fixes, minor UX tweaks. Released as needed.
+- **Minor (1.x.0):** New features, non-breaking API changes. Monthly or biweekly.
+- **Major (x.0.0):** Breaking changes, major redesign. Quarterly or as needed.
+
+**Deprecation policy:**
+- Announce deprecated features 2–4 weeks before removal.
+- Show in-app banner or warning in docs.
+- Provide migration guide.
+
+**Change log:**
+- Maintain CHANGELOG.md with all releases.
+- Format: date, version, features added, bugs fixed, breaking changes.
+
+---
+
+## 43. FAQ & common patterns
+
+**Q: How do I handle concurrent requests?**  
+A: Use React Query or similar to deduplicate requests. Ignore duplicate requests while one is in flight.
+
+**Q: How do I validate OTP input?**  
+A: Use `react-otp-input` or custom: 6-digit masked input, auto-focus next, auto-submit on complete.
+
+**Q: How do I show real-time balance updates?**  
+A: Poll with `setInterval` every 10–30s, or use WebSocket if backend supports it. Use React Query to cache.
+
+**Q: How do I handle errors from the API in forms?**  
+A: Display backend error.message in a toast or banner. Highlight relevant fields if error specifies field.
+
+**Q: How do I support offline mode?**  
+A: Cache recent data in localStorage. Show "offline" banner. Queue actions (transfers, KYC submissions) and retry when online.
+
+**Q: How do I track user engagement?**  
+A: Emit analytics events for key actions (sign-in, KYC, mint, transfer, etc.). Use Mixpanel or custom logger.
+
+**Q: Should I use Redux or Context?**  
+A: Context for auth/theme. Redux or Zustand for complex app state. React Query for server state.
+
+---
+
+## 44. Resources & links
+
+- **API Reference:** [API_SPECIFICATION.MD](../../TECHNICAL/API_SPECIFICATION.MD)
+- **Contracts:** [SMART_CONTRACT_SPEC.MD](../../DOCS/SMART_CONTRACT_SPEC.MD)
+- **Design Guide:** [FRONTEND_AND_UI.md](FRONTEND_AND_UI.md)
+- **Architecture:** [ARCHITECTURE.MD](../../TECHNICAL/ARCHITECTURE.MD)
+- **Contributing:** [CONTRIBUTING_GUIDE.MD](../../CONTRIBUTING_GUIDE.MD)
+- **Database Schema:** [DATABASE_SCHEMA.MD](../../TECHNICAL/DATABASE_SCHEMA.MD)
+
+---
+
+**Last updated:** June 18, 2026  
+**Status:** Ongoing (sections 1–22 stable; 23–44 framework for implementation)  
+**Maintained by:** Frontend team
+
