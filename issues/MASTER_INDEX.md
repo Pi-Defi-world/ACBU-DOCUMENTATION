@@ -3,10 +3,10 @@
 This folder consolidates **~200** MVP flaws and improvements across:
 
 - Backend (`acbu-backend`): **75** items — [backend.md](./backend.md)
-- Frontend (`acbu-frontend`): **68** items — [frontend.md](./frontend.md)
+- Frontend (`acbu-frontend`): **77** items — [frontend.md](./frontend.md)
 - Smart contracts (`acbu-smart-contract`): **60** items — [contracts.md](./contracts.md)
 
-**Total:** 203
+**Total:** 212
 
 ## How to use this backlog
 
@@ -18,12 +18,12 @@ This folder consolidates **~200** MVP flaws and improvements across:
 
 - **Live triage-ready catalogs in this folder (canonical working backlog):**
   - [backend.md](./backend.md) — 75 items (B-001..B-075)
-  - [frontend.md](./frontend.md) — 68 items (F-001..F-076)
+  - [frontend.md](./frontend.md) — 77 items (F-001..F-077)
   - [contracts.md](./contracts.md) — 60 items (C-001..C-060)
 - **Durable long-form references in `PROJECT/issues/`** (consolidated mirrors, see CHANGELOG):
   - [../PROJECT/issues/CONTRACTS_ISSUES.md](../PROJECT/issues/CONTRACTS_ISSUES.md) — consolidated into the canonical format in [PR #22](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/22); single source of truth, with Resolution Tracker (Section 8), Top Remediations ship-safety list, and Cross-Reference Map.
   - [../PROJECT/issues/BACKEND_ISSUES.md](../PROJECT/issues/BACKEND_ISSUES.md) — consolidated into the canonical format in [PR #23](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/23).
-  - [../PROJECT/issues/FRONTEND_ISSUES.md](../PROJECT/issues/FRONTEND_ISSUES.md) — consolidated into the canonical format in [PR #25](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/25); expanded to all 68 canonical entries (F-001..F-076) via follow-up canonical-ID migrations in [PR #28](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/28) (F-066 Shared Skeleton primitive, Medium), [PR #29](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/29) (F-071 Toast removal delay, Medium), and [PR #30](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/30) (F-076 Frontend `request()` no default timeout, High). Severity distribution: **5 Critical / 15 High / 25 Medium / 23 Low** = 68. Single source of truth for frontend issues, mirroring the contracts and backend catalogs.
+  - [../PROJECT/issues/FRONTEND_ISSUES.md](../PROJECT/issues/FRONTEND_ISSUES.md) — consolidated into the canonical format in [PR #25](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/25); expanded to all 77 canonical entries (F-001..F-077) via follow-up canonical-ID migrations in [PR #28](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/28) (F-066 Shared Skeleton primitive, Medium), [PR #29](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/29) (F-071 Toast removal delay, Medium), [PR #30](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/30) (F-076 Frontend `request()` no default timeout, High), and [PR #31](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/31) (F-067..F-077 batch: 3 Medium + 6 Low). Severity distribution: **5 Critical / 15 High / 28 Medium / 29 Low** = 77. Single source of truth for frontend issues, mirroring the contracts and backend catalogs.
 - **Truly historical (read-only):** Repo-root `ISSUES.md` / `acbu-smart-contract/ISSUES.md` may also exist; treat as historical unless actively maintained.
 
 ## Top 20 (ship-safety order)
@@ -57,6 +57,12 @@ _Per-item fix status is tracked in the [Resolution Tracker](../PROJECT/issues/CO
 
 This is the master index's own changelog. Catalog-level changes that affect this index are recorded here in **strict reverse-chronological order** (newest first); per-item fix tickets claim their own PR history via the linked Resolution Trackers.
 
+- **2026-06 — F-067..F-077 batch canonical-ID migration ([PR #31](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/31)).** Single follow-up PR absorbed the remaining 9 `(new)` Section 7 findings (legacy #55, #56, #68, #69, #72, #73, #74, #75, #77) into canonical F-067..F-077 in `issues/frontend.md`:
+  - **3 → 🟡 Medium** (data-validation correctness / privacy): F-067 (Contact inputs no maxLength, frontend/forms), F-068 (Profile inputs no maxLength/format validation, frontend/forms), F-074 (Silent username normalization on signup, frontend/auth).
+  - **6 → 🟢 Low** (perf / nav-pattern / hygiene): F-069 (Icons recreated each render, frontend/perf), F-070 (Menu items use `router.push` instead of Link, frontend/nav), F-072 (Mobile detection treats "unknown" as desktop, frontend/compat), F-073 (Post-KYC upload uncleaned setTimeout, frontend/hygiene), F-075 (Auto-fill heuristic requires length ≥ 56, frontend/ux), F-077 (`/p2p` client-side redirect only, frontend/nav).
+  - Severity distribution bumped **5 / 15 / 25 / 23 = 68** (post-#28..#30) → **5 / 15 / 28 / 29 = 77** — completing the `(new)` Section 7 backlog for `PROJECT/issues/FRONTEND_ISSUES.md`.
+  - Top 20 (ship-safety order) is intentionally **unchanged** in this follow-up: the F-067..F-077 batch added 3 Medium + 6 Low entries — none would rank above the existing Critical / High entries already on the ship-safety list, so re-sorting would reduce clarity for marginal gain.
+  - All 12 Section 7 `(new)` markers have now been adopted into canonical IDs F-066..F-077; the backlog of `_proposed_` follow-ups is now zero. Future audit findings will create fresh `(new)` rows for the next canonical-ID promotion cycle.
 - **2026-06 — F-066/F-071/F-076 follow-up canonical-ID migrations ([PR #28](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/28) · [PR #29](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/29) · [PR #30](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/30)).** Three follow-up canonical-ID PRs migrated legacy Section 7 `(new)` findings out of the nested `(new — propose F-XXX)` tags and into the canonical `/issues/frontend.md` triage-ready catalog:
   - [PR #28](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/28) promoted Section 7 legacy #49 ("Empty and loading states inconsistent — missing `Skeleton` primitive") into canonical **F-066** — _Inconsistent loading / empty state skeletons across pages_ — 🟡 Medium, `frontend/components`.
   - [PR #29](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/29) promoted Section 7 legacy #71 ("Toast removal delay is ~17 minutes; `TOAST_REMOVE_DELAY = 1000000`") into canonical **F-071** — _Toast removal delay is ~17 minutes_ — 🟡 Medium, `frontend/ux`.
