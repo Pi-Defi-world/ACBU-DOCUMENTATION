@@ -50,7 +50,11 @@ ACBU is a stablecoin backed by a basket of African currencies, designed to addre
 - **[Task Breakdown](PROJECT/TASK_BREAKDOWN.MD)** - Detailed task breakdown for all stages
 - **[Milestones](PROJECT/MILESTONES.MD)** - Key project milestones with acceptance criteria
 - **[Resource Plan](PROJECT/RESOURCE_PLAN.MD)** - Team composition, budget, and resource allocation
-- **Known issues:** [Contracts](CONTRACTS_ISSUES.md), [Backend](BACKEND_ISSUES.md), [Frontend](FRONTEND_ISSUES.md)
+- **Known issues:** [Contracts](issues/CONTRACTS_ISSUES.md), [Backend](issues/BACKEND_ISSUES.md), [Frontend](issues/FRONTEND_ISSUES.md)
+  - **Catalog consolidations** (durable long-form references — single source of truth per domain, discoverable when triaging):
+    - [`issues/CONTRACTS_ISSUES.md`](issues/CONTRACTS_ISSUES.md) — 60 canonical entries (C-001..C-060); 6 🔴 Critical / 21 🟠 High / 24 🟡 Medium / 9 🟢 Low. Consolidated in [PR #22](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/22).
+    - [`issues/BACKEND_ISSUES.md`](issues/BACKEND_ISSUES.md) — 75 canonical entries (B-001..B-075); 2 🔴 Critical / 21 🟠 High / 38 🟡 Medium / 14 🟢 Low. Consolidated in [PR #23](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/23).
+    - [`issues/FRONTEND_ISSUES.md`](issues/FRONTEND_ISSUES.md) — 68 canonical entries (F-001..F-076); 5 🔴 Critical / 15 🟠 High / 25 🟡 Medium / 23 🟢 Low. Consolidated into the canonical format in [PR #25](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/25); expanded to 68 canonical entries via follow-up canonical-ID migrations in [PR #28](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/28) (F-066 Skeleton primitive, Medium), [PR #29](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/29) (F-071 Toast-deletion delay, Medium), and [PR #30](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/30) (F-076 Frontend `request()` no default timeout, High).
 
 ## Quick Start
 
@@ -93,5 +97,5 @@ Apache License 2.0 - See [LICENSE](LICENSE) file for details.
 
 ---
 
-**Last Updated:** January 26, 2026  
+**Last Updated:** June 20, 2026  
 **Status:** Planning & Development
