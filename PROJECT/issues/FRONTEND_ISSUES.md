@@ -601,7 +601,7 @@ This document is the **single, durable long-form reference** for known issues in
 - **Acceptance check:** Forced unmount mid-timer does not crash, navigate, or duplicate-fire analytics; DevTools profile clean.
 
 ### F-075 — Auto-fill heuristic requires length ≥ 56
-- **Area:** frontend/ux · **Evidence:** `acbu-frontend/lib/autoFill.ts`
+- **Area:** frontend/ux · **Evidence:** `acbu-frontend/lib/autoFill.ts` (Differs from F-041, the URI-length filter for savings deposits — addresses lending + savings auto-fill)
 - **Impact:** Short, valid IDs do not trigger auto-fill; users paste and form is silent, requiring manual selection.
 - **Fix direction:** Multi-mode detection (length, content signature, recent-history); over-trigger rate must stay bounded (<5%).
 - **Acceptance check:** Known short IDs reliably trigger auto-fill in QA fixtures; over-trigger rate <5% in 50-paste regression corpus.

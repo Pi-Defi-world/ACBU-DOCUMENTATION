@@ -307,7 +307,7 @@ Canonical UI/app backlog for `acbu-frontend`. Older list: [../PROJECT/issues/FRO
 **Impact:** Users signing up with mixed-case emails silently land on lowercased versions; phishing-with-typos enrollment does not warn the user; subsequent login confusion when users re-type the form they originally submitted. **Fix direction:** Surface normalization in UI (e.g. “We will store this as: johndoe@example.com”) or refuse ambiguous capitalization with clear copy. **Acceptance check:** Signup flow either (a) rejects mixed-case with copy explaining why, or (b) shows normalized form before submit confirmation; QA verifies both surfaces are accessible (axe-core critical = 0).
 
 ### F-075 — Auto-fill heuristic requires length ≥ 56
-**Severity:** Low · **Area:** frontend/ux · **Evidence:** `acbu-frontend/lib/autoFill.ts`
+**Severity:** Low · **Area:** frontend/ux · **Evidence:** `acbu-frontend/lib/autoFill.ts` (Differs from F-041, the URI-length filter for savings deposits — addresses lending + savings auto-fill)
 **Impact:** Short, valid IDs (e.g. <56 char payment references) do not trigger auto-fill; users paste and form is silent, requiring manual selection. **Fix direction:** Multi-mode detection (length, content signature, recent-history) so short valid IDs also auto-fill where appropriate; over-trigger rate must stay bounded. **Acceptance check:** Known short IDs reliably trigger auto-fill in QA fixtures; over-trigger rate <5% in 50-paste regression corpus.
 
 ### F-077 — `/p2p` is client-side redirect only
