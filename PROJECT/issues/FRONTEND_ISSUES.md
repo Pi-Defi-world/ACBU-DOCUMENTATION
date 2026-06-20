@@ -84,8 +84,9 @@ This document is the **single, durable long-form reference** for known issues in
 | F-065 | 🟢 Low | frontend/security | No Subresource Integrity for third-party scripts (if any) |
 | F-066 | 🟡 Medium | frontend/components | Inconsistent loading / empty state skeletons across pages |
 | F-071 | 🟡 Medium | frontend/ux | Toast removal delay is ~17 minutes |
+| F-076 | 🟠 High | frontend/api | Frontend request() helper has no default timeout |
 
-**Totals:** 5 Critical · 14 High · 25 Medium · 23 Low · **67 total catalog items** (all IDs `F-001` through `F-071`, fully aligned with `issues/frontend.md`).
+**Totals:** 5 Critical · 15 High · 25 Medium · 23 Low · **68 total catalog items** (all IDs `F-001` through `F-076`, fully aligned with `issues/frontend.md`).
 
 ---
 
@@ -94,7 +95,7 @@ This document is the **single, durable long-form reference** for known issues in
 | Severity | Count |
 |----------|-------|
 | 🔴 Critical | **5** (F-001–F-005) |
-| 🟠 High | **14** (F-006, F-010, F-014, F-015, F-018–F-023, F-025, F-027, F-051, F-063) |
+| 🟠 High | **15** (F-006, F-010, F-014, F-015, F-018–F-023, F-025, F-027, F-051, F-063, F-076) |
 | 🟡 Medium | **25** (F-007, F-009, F-012, F-013, F-016, F-017, F-024, F-026, F-028–F-030, F-032, F-036–F-040, F-046, F-047, F-050, F-055, F-062, F-064, F-066, F-071) |
 | 🟢 Low | **23** (F-008, F-011, F-031, F-033–F-035, F-041–F-045, F-048, F-049, F-052–F-054, F-056–F-061, F-065) |
 | **Total** | **65** |
@@ -239,6 +240,13 @@ This document is the **single, durable long-form reference** for known issues in
 - **Impact:** POSTs hit Next.js and return 405 confusingly.
 - **Fix direction:** Add startup runtime check in layout for missing `NEXT_PUBLIC_API_BASE_URL`.
 - **Acceptance check:** Dev console shows loud misconfig banner if unset.
+
+### F-076 — Frontend `request()` helper has no default timeout
+- **Area:** frontend/api
+- **Evidence:** `acbu-frontend/lib/api/client.ts` `request()` (uses raw `fetch`, no `AbortController` / timeout)
+- **Impact:** Hung requests spin forever; users see indefinite spinners; tabs accumulate fetch pile-up; mobile users hit memory pressure; retries amplify the issue; users may force-close during pending operations, losing state.
+- **Fix direction:** Wrap `request()` with `AbortController` + configurable default timeout (e.g. 30 s); honor caller-supplied `signal` for cancellation; type timeouts as a distinct `RequestTimeoutError`.
+- **Acceptance check:** Network-throttled test surfaces typed timeout error to UI with retry; integration test asserts `request()` aborts after configured deadline even if backend is unreachable.
 
 ---
 
@@ -660,7 +668,7 @@ The legacy list previously alone at this path was a more recent manual review wi
 73. **Post-KYC upload navigation uses uncleaned setTimeout** – **Distinct finding, propose F-073.** *(new — propose F-073)*
 74. **Silent username normalization on signup** – `lib/api/auth.ts` lowercases + strips whitespace without warning UI. **Distinct finding, propose F-074.** *(new — propose F-074)*
 75. **Auto-fill heuristic requires length >= 56** – **Distinct finding, propose F-075.** *(new — propose F-075)* — note: this overlaps the older F-041 but addresses a different code path (lending + savings auto-fill, not URI-length filter).
-76. **API fetch has no timeout** – Frontend `request()` uses `fetch` with no default timeout. **Distinct finding, propose F-076.** *(new — propose F-076)*
+76. **API fetch has no timeout** – Frontend `request()` uses `fetch` with no default timeout. **Distinct finding, adopted into canonical catalog as F-076** (High · frontend/api). *(new → adopted as F-076 in companion canonical-ID PR; see Section 4 and Section 8 for canonical rows)*
 77. **/p2p is client-side redirect only** – `app/(app)/p2p/page.tsx` does `useEffect -> router.replace('/send')`. **Distinct finding, propose F-077.** *(new — propose F-077)*
 
 > **Reconciliation policy:** When a follow-up audit pass opens a new canonical ID for items tagged `(new)`, the row is migrated forward and the tagged comment block in this section is updated to point at the new ID. New IDs are expected to land in `F-066+` and `F-071..F-076` should preserve backward-reference to this section so future readers can trace provenance.
@@ -677,7 +685,7 @@ The legacy list previously alone at this path was a more recent manual review wi
 |----|-------|--------|-------|
 | _(example)_ | _(example anchor for prior documentary PRs — PR #14 closed issue #1, PR #22 closed #12, PR #23 backend, PR #24 master-index)_ | ✅ Fixed (PR #24 merged) | Documentary PR — not a code fix; historical anchor |
 | F-001..F-005 | _Critical cluster_ | 🟡 Open (ship blockers) | Track with TypeScript / wallet / auth refactor |
-| F-006, F-010, F-014..F-023, F-025, F-027, F-051, F-063 | _High cluster (14 items)_ | 🟡 Open | Next.js auth + feature-flag workstream |
+| F-006, F-010, F-014..F-023, F-025, F-027, F-051, F-063, F-076 | _High cluster (15 items)_ | 🟡 Open | Next.js auth + feature-flag workstream |
 | F-007, F-009, F-012, F-013, F-016, F-017, F-024, F-026, F-028–F-030, F-032, F-036–F-040, F-046, F-047, F-050, F-055, F-062, F-064, F-066, F-071 | _Medium cluster (25 items)_ | 🟡 Open | Quality / a11y / hardening workstream |
 | F-008, F-011, F-031, F-033..F-035, F-041..F-045, F-048..F-049, F-052..F-054, F-056..F-061, F-065 | _Low cluster (23 items)_ | 🟡 Open | Polish / formatting / docs workstream |
 
