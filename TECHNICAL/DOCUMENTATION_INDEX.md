@@ -25,6 +25,11 @@
   - Folder organization
   - Component hierarchy
 
+- **[MONITORING_AND_OBSERVABILITY.MD](./MONITORING_AND_OBSERVABILITY.MD)**
+  - System monitoring and health checks
+  - Metrics, logs, tracing, and alerts
+  - Internal and public dashboards
+
 - **[/docs/ROUTES.md](./docs/ROUTES.md)**
   - Complete routing guide
   - Route structure and navigation
