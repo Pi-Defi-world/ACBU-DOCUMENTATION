@@ -266,3 +266,11 @@ Canonical UI/app backlog for `acbu-frontend`. Older list: [../PROJECT/issues/FRO
 **Severity:** Low · **Area:** frontend/security · **Evidence:** `app/layout` / analytics
 **Impact:** Supply-chain risk if external scripts added. **Fix direction:** Prefer first-party hosting; SRI for CDNs. **Acceptance check:** Security review checklist item signed off.
 
+### F-066 — Inconsistent loading / empty state skeletons across pages
+**Severity:** Medium · **Area:** frontend/components · **Evidence:** Per-page `loading.tsx` / `empty.tsx` wrappers across `app/(app)/**`
+**Impact:** Loading and empty states are inconsistent across pages (mix of spinners, dimmed text, blank space). Cognitive load + a maintenance burden, plus a11y regressions (no shared `aria-busy` semantics). **Fix direction:** Introduce a single `<Skeleton>` / `<EmptyState>` shared primitive in `components/ui/`; replace ad-hoc loading/empty wrappers across `app/(app)/**` with this primitive. **Acceptance check:** All `app/(app)/**/loading.tsx` files import the shared `<Skeleton>`; design QA spot-check shows visual consistency across send/home/mint/savings/currency; axe-core reports no missing busy-state violations.
+
+### F-071 — Toast removal delay is ~17 minutes
+**Severity:** Medium · **Area:** frontend/ux · **Evidence:** `acbu-frontend/lib/toast.ts` constant `TOAST_REMOVE_DELAY = 1000000`
+**Impact:** Default toast auto-dismiss is ~17 minutes. Stale toasts pollute the toast log and may display transaction context that should have been cleared (privacy / shoulder-surfer risk in a financial app; trust issue for users who don’t understand why old toasts persist). **Fix direction:** Use a sane default dismiss window (e.g. 5–10 s); gate “sticky” toasts behind an explicit `sticky: true` option for in-progress actions. **Acceptance check:** Default toast auto-dismiss ≤ 10 s under default config; sticky / progress toasts continue to work for genuinely long-running operations (e.g. async Stellar deposit confirmation).
+
