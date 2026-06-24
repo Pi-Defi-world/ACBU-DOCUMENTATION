@@ -14,31 +14,53 @@ This folder consolidates **~200** MVP flaws and improvements across:
 2. Create tickets in your tracker; keep the **Evidence** path as the source anchor.
 3. When an item is fixed, prefer **linking the PR** in your tracker (avoid editing this backlog as a changelog).
 
-## Deduping against older docs
+## Catalog sources & deduping
 
-- Legacy consolidated lists: [../PROJECT/issues/BACKEND_ISSUES.md](../PROJECT/issues/BACKEND_ISSUES.md), [../PROJECT/issues/FRONTEND_ISSUES.md](../PROJECT/issues/FRONTEND_ISSUES.md), [../PROJECT/issues/CONTRACTS_ISSUES.md](../PROJECT/issues/CONTRACTS_ISSUES.md).
-- Repo-root `ISSUES.md` / `acbu-smart-contract/ISSUES.md` may also exist; treat them as **historical** unless actively maintained.
+- **Live triage-ready catalogs in this folder (canonical working backlog):**
+  - [backend.md](./backend.md) — 75 items (B-001..B-075)
+  - [frontend.md](./frontend.md) — 65 items (F-001..F-065)
+  - [contracts.md](./contracts.md) — 60 items (C-001..C-060)
+- **Durable long-form references in `PROJECT/issues/`** (consolidated mirrors, see CHANGELOG):
+  - [../PROJECT/issues/CONTRACTS_ISSUES.md](../PROJECT/issues/CONTRACTS_ISSUES.md) — consolidated into the canonical format in [PR #22](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/22); single source of truth, with Resolution Tracker (Section 8), Top Remediations ship-safety list, and Cross-Reference Map.
+  - [../PROJECT/issues/BACKEND_ISSUES.md](../PROJECT/issues/BACKEND_ISSUES.md) — consolidated into the canonical format in [PR #23](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/23).
+  - [../PROJECT/issues/FRONTEND_ISSUES.md](../PROJECT/issues/FRONTEND_ISSUES.md) — consolidated into the canonical format in [PR #25](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/25); all 65 canonical entries (F-001..F-065), 5 Critical / 14 High / 23 Medium / 23 Low. Single source of truth for frontend issues, mirroring the contracts and backend catalogs.
+- **Truly historical (read-only):** Repo-root `ISSUES.md` / `acbu-smart-contract/ISSUES.md` may also exist; treat as historical unless actively maintained.
 
 ## Top 20 (ship-safety order)
 
-1. C-001 Escrow `release` missing auth (contracts)
-2. C-005 Savings vault missing `require_auth` (contracts)
-3. C-006 Lending pool missing `require_auth` (contracts)
-4. C-002 `mint_from_fiat` unrestricted (contracts)
-5. F-001 Next.js `ignoreBuildErrors` (frontend build safety)
-6. F-002 API key in `sessionStorage` (frontend)
-7. F-003 Passcode stored in `sessionStorage` for wallet decrypt path (frontend)
-8. F-004 Wallet secret 'encryption' is reversible (frontend)
-9. F-005 Plaintext wallet storage path exists (frontend)
-10. B-005 Webhook signature verification fail-open risk (backend)
-11. B-006 Recovery unlock single-factor risk (backend)
-12. B-003 USDC job infinite requeue risk (backend)
-13. B-001 Basket deposit USD limit proxy wrong (backend)
-14. B-002 Floating `Number()` on money paths (backend)
-15. C-004 `verify_reserves` wrong supply source (contracts)
-16. C-003 Escrow ID collision (contracts)
-17. B-010 ReserveTracker DB vs chain supply drift (backend)
-18. B-009 Burn fee policy threshold correctness (backend)
-19. F-015 Savings deposit not wired (frontend)
-20. B-022 Bills catalog/pay not implemented (backend) + F-020 Bills payment UI console-only (frontend)
+_Per-item fix status is tracked in the [Resolution Tracker](../PROJECT/issues/CONTRACTS_ISSUES.md#resolution-tracker-fix-status) added in [PR #22](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/22), the analogous [backend Resolution Tracker](../PROJECT/issues/BACKEND_ISSUES.md#resolution-tracker-fix-status) in [PR #23](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/23), and the [frontend Resolution Tracker](../PROJECT/issues/FRONTEND_ISSUES.md#resolution-tracker-fix-status) in [PR #25](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/25). The Top 20 below is the ship-safety triage ordering; the corresponding canonical IDs in each catalog's Resolution Tracker are the canonical record of open/fixed status._
+
+1. **C-001** Escrow `release` missing auth (contracts) — [tracker](../PROJECT/issues/CONTRACTS_ISSUES.md#resolution-tracker-fix-status)
+2. **C-005** Savings vault missing `require_auth` (contracts) — [tracker](../PROJECT/issues/CONTRACTS_ISSUES.md#resolution-tracker-fix-status)
+3. **C-006** Lending pool missing `require_auth` (contracts) — [tracker](../PROJECT/issues/CONTRACTS_ISSUES.md#resolution-tracker-fix-status)
+4. **C-002** `mint_from_fiat` unrestricted (contracts) — [tracker](../PROJECT/issues/CONTRACTS_ISSUES.md#resolution-tracker-fix-status)
+5. **F-002** API key in `sessionStorage` (frontend auth) — [tracker](../PROJECT/issues/FRONTEND_ISSUES.md#resolution-tracker-fix-status)
+6. **F-005** Plaintext wallet storage path exists (frontend wallet) — [tracker](../PROJECT/issues/FRONTEND_ISSUES.md#resolution-tracker-fix-status)
+7. **F-001** Next.js `ignoreBuildErrors` (frontend build safety) — [tracker](../PROJECT/issues/FRONTEND_ISSUES.md#resolution-tracker-fix-status)
+8. **F-014** Send success dialog clears amount before dialog (frontend ux-money) — [tracker](../PROJECT/issues/FRONTEND_ISSUES.md#resolution-tracker-fix-status)
+9. **F-025** Balances shown as em dash placeholders (frontend data) — [tracker](../PROJECT/issues/FRONTEND_ISSUES.md#resolution-tracker-fix-status)
+10. **F-019** Currency page simulates operations (frontend feature) — [tracker](../PROJECT/issues/FRONTEND_ISSUES.md#resolution-tracker-fix-status)
+11. **F-022** Security settings placeholder (frontend settings) — [tracker](../PROJECT/issues/FRONTEND_ISSUES.md#resolution-tracker-fix-status)
+12. **F-051** Signup passcode minimum too weak (frontend auth) — [tracker](../PROJECT/issues/FRONTEND_ISSUES.md#resolution-tracker-fix-status)
+13. **F-063** Environment base URL misconfiguration footgun (frontend config) — [tracker](../PROJECT/issues/FRONTEND_ISSUES.md#resolution-tracker-fix-status)
+14. **F-020** Bills payment console-only (frontend feature) — [tracker](../PROJECT/issues/FRONTEND_ISSUES.md#resolution-tracker-fix-status)
+15. **F-015** Savings deposit not wired (frontend feature) — [tracker](../PROJECT/issues/FRONTEND_ISSUES.md#resolution-tracker-fix-status)
+16. **B-005** Webhook signature verification fail-open risk (backend) — [tracker](../PROJECT/issues/BACKEND_ISSUES.md#resolution-tracker-fix-status)
+17. **B-006** Recovery unlock single-factor risk (backend) — [tracker](../PROJECT/issues/BACKEND_ISSUES.md#resolution-tracker-fix-status)
+18. **C-004** `verify_reserves` wrong source of truth (contracts) — [tracker](../PROJECT/issues/CONTRACTS_ISSUES.md#resolution-tracker-fix-status)
+19. **C-003** Escrow ID collision (contracts) — [tracker](../PROJECT/issues/CONTRACTS_ISSUES.md#resolution-tracker-fix-status)
+20. **F-004** Wallet secret 'encryption' is base64 obfuscation (frontend wallet)
+
+---
+
+## CHANGELOG
+
+This is the master index's own changelog. Catalog-level changes that affect this index are recorded here in **strict reverse-chronological order** (newest first); per-item fix tickets claim their own PR history via the linked Resolution Trackers.
+
+- **2026-06 — Frontend catalog consolidation ([PR #25](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/25)).** `PROJECT/issues/FRONTEND_ISSUES.md` is now the **single source of truth** for frontend issues, mirroring the contracts and backend catalogs. Coverage aligned to all 65 canonical entries (F-001..F-065) with stable IDs in the severity/area/evidence/impact/fix/acceptance format used by `issues/frontend.md`. Severity distribution: **5 Critical / 14 High / 23 Medium / 23 Low**.
+  - New structural sections in `PROJECT/issues/FRONTEND_ISSUES.md`: Summary Table, Severity Counts, **Resolution Tracker (Section 8)**, Top Remediations (ship-safety order), Cross-Reference Map, legacy 77-item cross-reference, Maintenance notes.
+  - The Top 20 list below now anchors per-item frontend trackers (Critical `F-002`/`F-005`/`F-001` for wallet + auth, plus top-High `F-014`/`F-025`/`F-019`/`F-022`/`F-051`/`F-063`/`F-020`/`F-015`) to the [frontend Resolution Tracker](../PROJECT/issues/FRONTEND_ISSUES.md#resolution-tracker-fix-status) so reviewers can confirm open/fixed status at a glance. Legacy `F-004` critical retains its slot for completeness without a per-item pointer (next PR can add full per-item coverage on remaining Critical IDs).
+- **2026-06 — MASTER_INDEX.md refresh ([PR #24](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/24)).** Replaced the older `Deduping against older docs` section with a `Catalog sources & deduping` section that distinguishes three states — **canonical triage-ready** (this folder), **durable long-form** (`PROJECT/issues/`, consolidated), and **truly historical** (read-only). Catalog links now cover contracts ([PR #22](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/22)), backend ([PR #23](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/23)), and (as of [PR #25](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/25)) frontend; forward link for the frontend catalog was raised from "pending follow-up PR" to a live link in PR #25. The Top 20 list anchors per-item trackers to the **Resolution Tracker (Section 8) of each consolidated catalog**.
+- **2026-06 — Backend catalog consolidation ([PR #23](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/23)).** `PROJECT/issues/BACKEND_ISSUES.md` consolidated into the canonical severity/area/evidence/impact/fix/acceptance format with all 75 entries (B-001..B-075); severity distribution 2 Critical / 21 High / 38 Medium / 14 Low. Added an equivalent [Resolution Tracker](../PROJECT/issues/BACKEND_ISSUES.md#resolution-tracker-fix-status) (Section 8), Top Remediations ship-safety list, Cross-Reference Map, and legacy 56-item cross-reference. The legacy `(new)` items in Section 7 propose follow-up canonical IDs (`B-076+`) once a separate PR promotes them.
+- **2026-06 — Contracts catalog consolidation ([PR #22](https://github.com/Pi-Defi-world/ACBU-DOCUMENTATION/pull/22)).** `PROJECT/issues/CONTRACTS_ISSUES.md` is the **single source of truth** for smart-contract issues. Coverage expanded from a 34-item flat list to all 60 canonical entries (C-001..C-060) with stable IDs in the severity/area/evidence/impact/fix/acceptance format used by `issues/contracts.md`. Severity distribution: 6 Critical / 21 High / 24 Medium / 9 Low. New structural sections: Summary Table, Severity Counts, **Resolution Tracker (Section 8)**, Top Remediations (ship-safety order), Cross-Reference Map, legacy 34-item cross-reference, Maintenance notes.
 
