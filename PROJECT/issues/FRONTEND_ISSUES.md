@@ -82,8 +82,20 @@ This document is the **single, durable long-form reference** for known issues in
 | F-063 | 🟠 High | frontend/config | Environment base URL misconfiguration footgun |
 | F-064 | 🟡 Medium | frontend/security | No Content-Security-Policy for Next app |
 | F-065 | 🟢 Low | frontend/security | No Subresource Integrity for third-party scripts (if any) |
+| F-066 | 🟡 Medium | frontend/components | Inconsistent loading / empty state skeletons across pages |
+| F-071 | 🟡 Medium | frontend/ux | Toast removal delay is ~17 minutes |
+| F-076 | 🟠 High | frontend/api | Frontend request() helper has no default timeout |
+| F-067 | 🟡 Medium | frontend/forms | Contact inputs have no maxLength |
+| F-068 | 🟡 Medium | frontend/forms | Profile inputs have no maxLength or format validation |
+| F-069 | 🟢 Low | frontend/perf | Icons recreated each render |
+| F-070 | 🟢 Low | frontend/nav | Menu items use router.push instead of Link |
+| F-072 | 🟢 Low | frontend/compat | Mobile detection treats "unknown" as desktop |
+| F-073 | 🟢 Low | frontend/hygiene | Post-KYC upload navigation uses uncleaned setTimeout |
+| F-074 | 🟡 Medium | frontend/auth | Silent username normalization on signup |
+| F-075 | 🟢 Low | frontend/ux | Auto-fill heuristic requires length >= 56 |
+| F-077 | 🟢 Low | frontend/nav | /p2p route is client-side redirect only |
 
-**Totals:** 5 Critical · 14 High · 23 Medium · 23 Low · **65 total catalog items** (all IDs `F-001` through `F-065`, fully aligned with `issues/frontend.md`).
+**Totals:** 5 Critical · 15 High · 28 Medium · 29 Low · **77 total catalog items** (all IDs `F-001` through `F-077`, fully aligned with `issues/frontend.md`).
 
 ---
 
@@ -92,9 +104,9 @@ This document is the **single, durable long-form reference** for known issues in
 | Severity | Count |
 |----------|-------|
 | 🔴 Critical | **5** (F-001–F-005) |
-| 🟠 High | **14** (F-006, F-010, F-014, F-015, F-018–F-023, F-025, F-027, F-051, F-063) |
-| 🟡 Medium | **23** (F-007, F-009, F-012, F-013, F-016, F-017, F-024, F-026, F-028–F-030, F-032, F-036–F-040, F-046, F-047, F-050, F-055, F-062, F-064) |
-| 🟢 Low | **23** (F-008, F-011, F-031, F-033–F-035, F-041–F-045, F-048, F-049, F-052–F-054, F-056–F-061, F-065) |
+| 🟠 High | **15** (F-006, F-010, F-014, F-015, F-018–F-023, F-025, F-027, F-051, F-063, F-076) |
+| 🟡 Medium | **28** (F-007, F-009, F-012, F-013, F-016, F-017, F-024, F-026, F-028–F-030, F-032, F-036–F-040, F-046, F-047, F-050, F-055, F-062, F-064, F-066, F-067, F-068, F-071, F-074) |
+| 🟢 Low | **29** (F-008, F-011, F-031, F-033–F-035, F-041–F-045, F-048, F-049, F-052–F-054, F-056–F-061, F-065, F-069, F-070, F-072, F-073, F-075, F-077) |
 | **Total** | **65** |
 
 ---
@@ -238,6 +250,13 @@ This document is the **single, durable long-form reference** for known issues in
 - **Fix direction:** Add startup runtime check in layout for missing `NEXT_PUBLIC_API_BASE_URL`.
 - **Acceptance check:** Dev console shows loud misconfig banner if unset.
 
+### F-076 — Frontend `request()` helper has no default timeout
+- **Area:** frontend/api
+- **Evidence:** `acbu-frontend/lib/api/client.ts` `request()` (uses raw `fetch`, no `AbortController` / timeout)
+- **Impact:** Hung requests spin forever; users see indefinite spinners; tabs accumulate fetch pile-up; mobile users hit memory pressure; retries amplify the issue; users may force-close during pending operations, losing state.
+- **Fix direction:** Wrap `request()` with `AbortController` + configurable default timeout (e.g. 30 s); honor caller-supplied `signal` for cancellation; type timeouts as a distinct `RequestTimeoutError`.
+- **Acceptance check:** Network-throttled test surfaces typed timeout error to UI with retry; integration test asserts `request()` aborts after configured deadline even if backend is unreachable.
+
 ---
 
 ## 5. Medium Severity Issues (🟡)
@@ -379,6 +398,41 @@ This document is the **single, durable long-form reference** for known issues in
 - **Impact:** XSS impact amplified when keys live in sessionStorage.
 - **Fix direction:** Add strict CSP nonces via Next middleware.
 - **Acceptance check:** CSP report-only phase then enforce.
+
+### F-066 — Inconsistent loading / empty state skeletons across pages
+- **Area:** frontend/components
+- **Evidence:** Per-page `loading.tsx` / `empty.tsx` wrappers across `app/(app)/**`
+- **Impact:** Loading and empty states are inconsistent across pages (mix of spinners, dimmed text, blank space). Cognitive load + maintenance burden, plus a11y regressions (no shared `aria-busy` semantics).
+- **Fix direction:** Introduce a single `<Skeleton>` / `<EmptyState>` shared primitive in `components/ui/`; replace ad-hoc loading/empty wrappers across `app/(app)/**` with this primitive.
+- **Acceptance check:** All `app/(app)/**/loading.tsx` files import the shared `<Skeleton>`; design QA spot-check shows visual consistency across send/home/mint/savings/currency; axe-core reports no missing busy-state violations.
+
+### F-071 — Toast removal delay is ~17 minutes
+- **Area:** frontend/ux
+- **Evidence:** `acbu-frontend/lib/toast.ts` constant `TOAST_REMOVE_DELAY = 1000000`
+- **Impact:** Default toast auto-dismiss is ~17 minutes. Stale toasts pollute the toast log and may display transaction context that should have been cleared (privacy / shoulder-surfer risk in a financial app; trust issue for users who don’t understand why old toasts persist).
+- **Fix direction:** Use a sane default dismiss window (e.g. 5–10 s); gate “sticky” toasts behind an explicit `sticky: true` option for in-progress actions.
+- **Acceptance check:** Default toast auto-dismiss ≤ 10 s under default config; sticky / progress toasts continue to work for genuinely long-running operations (e.g. async Stellar deposit confirmation).
+
+### F-067 — Contact inputs have no `maxLength`
+- **Area:** frontend/forms
+- **Evidence:** `acbu-frontend/app/(app)/contacts/**` input fields
+- **Impact:** Long names/paste content can overflow UI tabs and submission; backend may reject with confusing 400 mid-flow.
+- **Fix direction:** Add `maxLength` per backend schema; show helpful character counter on long fields.
+- **Acceptance check:** Pasting >100 chars is truncated at UI level; backend-aligned limits enforced everywhere; QA confirms no overflow on common pastes.
+
+### F-068 — Profile inputs have no `maxLength` or format validation
+- **Area:** frontend/forms
+- **Evidence:** `acbu-frontend/app/(app)/me/**` profile fields (bio, display name, contact details)
+- **Impact:** Profile text fields ship unconstrained; backend truncates mid-submission with confusing errors.
+- **Fix direction:** Add `maxLength` and format hints per backend schema; client-side email/phone regex gates; inline character counters.
+- **Acceptance check:** Bio / display name fields enforce limits; invalid email/phone inputs blocked at UI before submit; UAT shows zero-format mismatch errors from backoffice.
+
+### F-074 — Silent username normalization on signup
+- **Area:** frontend/auth
+- **Evidence:** `acbu-frontend/lib/api/auth.ts` lowercases + strips whitespace without warning UI
+- **Impact:** Users signing up with mixed-case emails silently land on lowercased versions; phishing-with-typos enrollment does not warn the user; subsequent login confusion.
+- **Fix direction:** Surface normalization in UI (e.g. "We will store this as: johndoe@example.com") or refuse ambiguous capitalization with clear copy.
+- **Acceptance check:** Signup flow either rejects mixed-case with copy explaining why, or shows normalized form before submit confirmation; QA verifies both surfaces are accessible.
 
 ---
 
@@ -522,6 +576,42 @@ This document is the **single, durable long-form reference** for known issues in
 - **Fix direction:** Prefer first-party hosting; SRI for CDNs.
 - **Acceptance check:** Security review checklist item signed off.
 
+### F-069 — Icons recreated each render
+- **Area:** frontend/perf · **Evidence:** `acbu-frontend/components/icons/**` declarative component instances
+- **Impact:** Every render allocates a fresh icon subtree; unnecessary CPU + memory pressure on low-end devices.
+- **Fix direction:** Memoize icon components (React.memo + useMemo) or precompute static SVGs as named exports; collapse duplicates.
+- **Acceptance check:** React profiler shows no re-renders of unchanged icons under normal nav; Lighthouse perf unchanged or improved.
+
+### F-070 — Menu items use `router.push` instead of Link
+- **Area:** frontend/nav · **Evidence:** `acbu-frontend/components/menu/<MenuItem>.tsx`
+- **Impact:** Imperative nav breaks browser back-button semantics; missing `<a>` accessibility surface (VoiceOver miss); poor SEO.
+- **Fix direction:** Use Next.js `<Link>` for internal destinations; reserve `router.push` only for code-driven navigation.
+- **Acceptance check:** All visible menu items render `<a href>`; browser back button returns to prior menu state; VoiceOver reads destination name.
+
+### F-072 — Mobile detection treats "unknown" as desktop
+- **Area:** frontend/compat · **Evidence:** `acbu-frontend/lib/useIsMobile.ts` (or similar)
+- **Impact:** Unknown browsers / tablets render desktop UI; UX acceptable trade-off.
+- **Fix direction:** Default to desktop when unknown; emit telemetry for fail-open detection so coverage improves over time.
+- **Acceptance check:** Coverage telemetry reports unknown-browser counts in production; visual smoke test passes for desktop Chrome/Safari/Firefox.
+
+### F-073 — Post-KYC upload navigation uses uncleaned `setTimeout`
+- **Area:** frontend/hygiene · **Evidence:** `acbu-frontend/app/auth/kyc/**` post-upload flow
+- **Impact:** Timer may fire after user has navigated away, causing redundant/confusing state updates and duplicate analytics.
+- **Fix direction:** Cancel timer on unmount; switch to fixed-delay UI countdown component rendered inline with Cancel button.
+- **Acceptance check:** Forced unmount mid-timer does not crash, navigate, or duplicate-fire analytics; DevTools profile clean.
+
+### F-075 — Auto-fill heuristic requires length ≥ 56
+- **Area:** frontend/ux · **Evidence:** `acbu-frontend/lib/autoFill.ts`
+- **Impact:** Short, valid IDs do not trigger auto-fill; users paste and form is silent, requiring manual selection.
+- **Fix direction:** Multi-mode detection (length, content signature, recent-history); over-trigger rate must stay bounded (<5%).
+- **Acceptance check:** Known short IDs reliably trigger auto-fill in QA fixtures; over-trigger rate <5% in 50-paste regression corpus.
+
+### F-077 — `/p2p` route is client-side redirect only
+- **Area:** frontend/nav · **Evidence:** `acbu-frontend/app/(app)/p2p/page.tsx` with `useEffect → router.replace('/send')`
+- **Impact:** Direct `/p2p` URLs flash blank page before client-side redirect; SSR/SEO wrong; analytics double-count.
+- **Fix direction:** Either rebrand to a server-side route once wired up, or hide from navigation until P2P feature is launched.
+- **Acceptance check:** Direct `/p2p` URLs either render real content or are feature-flag gated; analytics dedupes correctly.
+
 ---
 
 ## 7. Legacy 77-Item Origin List (cross-reference)
@@ -602,7 +692,7 @@ The legacy list previously alone at this path was a more recent manual review wi
 
 ### Low – Design Consistency
 
-49. **Empty and loading states inconsistent** – Cross-cuts F-049 + a missing `Skeleton` primitive. **Distinct finding; promote to F-066 in a follow-up canonical PR.** *(new — propose F-066)*
+49. **Empty and loading states inconsistent** – Cross-cuts F-049 + a missing `Skeleton` primitive. **Distinct finding, adopted into canonical catalog as F-066** (Medium · frontend/components). *(new → adopted as F-066 in companion canonical-ID PR; see Section 5 and Section 8 for canonical rows)*
 50. **Status badge colours in dark mode** – *(moved → F-048)*
 51. **Back button pattern inconsistent** – *(moved → F-049)*
 
@@ -611,8 +701,8 @@ The legacy list previously alone at this path was a more recent manual review wi
 52. **Burn form fields missing maxLength and validation** – *(moved → F-050)*
 53. **Signup passcode minimum too weak** – *(moved → F-051)*
 54. **Send amount allows negative via keyboard** – *(moved → F-052)*
-55. **Contact inputs have no maxLength** – Cross-cuts F-052 + new maxLength checks; **distinct finding, propose F-067.** *(new — propose F-067)*
-56. **Profile inputs have no maxLength or format validation** – **Distinct finding, propose F-068.** *(new — propose F-068)*
+55. **Contact inputs have no maxLength** – Cross-cuts F-052 + new maxLength checks. **Distinct finding, adopted into canonical catalog as F-067** (Medium · frontend/forms). *(new → adopted as F-067 in companion canonical-ID batch PR; see Section 5 and Section 8 for canonical rows)*
+56. **Profile inputs have no maxLength or format validation** – **Distinct finding, adopted into canonical catalog as F-068** (Medium · frontend/forms). *(new → adopted as F-068 in companion canonical-ID batch PR; see Section 5 and Section 8 for canonical rows)*
 57. **Recipient input has no maxLength** – Cross-cuts F-067. *(moved → F-067)*
 
 ### Low – Navigation
@@ -633,19 +723,19 @@ The legacy list previously alone at this path was a more recent manual review wi
 ### Low – Performance
 
 67. **loadTransfers / loadContacts not memoized** – *(moved → F-060)*
-68. **Icons recreated each render** – **Distinct finding, propose F-069.** *(new — propose F-069)*
-69. **Menu items use router.push instead of Link** – **Distinct finding, propose F-070.** *(new — propose F-070)*
+68. **Icons recreated each render** – **Distinct finding, adopted into canonical catalog as F-069** (Low · frontend/perf). *(new → adopted as F-069 in companion canonical-ID batch PR; see Section 6 and Section 8 for canonical rows)*
+69. **Menu items use router.push instead of Link** – **Distinct finding, adopted into canonical catalog as F-070** (Low · frontend/nav). *(new → adopted as F-070 in companion canonical-ID batch PR; see Section 6 and Section 8 for canonical rows)*
 
 ### Trivial
 
 70. **Clipboard API may fail on HTTP** – *(moved → F-061)*
-71. **Toast removal delay is ~17 minutes** – `TOAST_REMOVE_DELAY = 1000000`. **Distinct finding, propose F-071.** *(new — propose F-071)*
-72. **Mobile detection treats "unknown" as desktop** – **Distinct finding, propose F-072.** *(new — propose F-072)*
-73. **Post-KYC upload navigation uses uncleaned setTimeout** – **Distinct finding, propose F-073.** *(new — propose F-073)*
-74. **Silent username normalization on signup** – `lib/api/auth.ts` lowercases + strips whitespace without warning UI. **Distinct finding, propose F-074.** *(new — propose F-074)*
-75. **Auto-fill heuristic requires length >= 56** – **Distinct finding, propose F-075.** *(new — propose F-075)* — note: this overlaps the older F-041 but addresses a different code path (lending + savings auto-fill, not URI-length filter).
-76. **API fetch has no timeout** – Frontend `request()` uses `fetch` with no default timeout. **Distinct finding, propose F-076.** *(new — propose F-076)*
-77. **/p2p is client-side redirect only** – `app/(app)/p2p/page.tsx` does `useEffect -> router.replace('/send')`. **Distinct finding, propose F-077.** *(new — propose F-077)*
+71. **Toast removal delay is ~17 minutes** – `TOAST_REMOVE_DELAY = 1000000`. **Distinct finding, adopted into canonical catalog as F-071** (Medium · frontend/ux). *(new → adopted as F-071 in companion canonical-ID PR; see Section 5 and Section 8 for canonical rows)*
+72. **Mobile detection treats "unknown" as desktop** – **Distinct finding, adopted into canonical catalog as F-072** (Low · frontend/compat). *(new → adopted as F-072 in companion canonical-ID batch PR; see Section 6 and Section 8 for canonical rows)*
+73. **Post-KYC upload navigation uses uncleaned setTimeout** – **Distinct finding, adopted into canonical catalog as F-073** (Low · frontend/hygiene). *(new → adopted as F-073 in companion canonical-ID batch PR; see Section 6 and Section 8 for canonical rows)*
+74. **Silent username normalization on signup** – `lib/api/auth.ts` lowercases + strips whitespace without warning UI. **Distinct finding, adopted into canonical catalog as F-074** (Medium · frontend/auth). *(new → adopted as F-074 in companion canonical-ID batch PR; see Section 5 and Section 8 for canonical rows)*
+75. **Auto-fill heuristic requires length >= 56** – **Distinct finding, adopted into canonical catalog as F-075** (Low · frontend/ux). *(new → adopted as F-075 in companion canonical-ID batch PR; see Section 6 and Section 8 for canonical rows)* — note: this overlaps the older F-041 but addresses a different code path (lending + savings auto-fill, not URI-length filter).
+76. **API fetch has no timeout** – Frontend `request()` uses `fetch` with no default timeout. **Distinct finding, adopted into canonical catalog as F-076** (High · frontend/api). *(new → adopted as F-076 in companion canonical-ID PR; see Section 4 and Section 8 for canonical rows)*
+77. **/p2p is client-side redirect only** – `app/(app)/p2p/page.tsx` does `useEffect -> router.replace('/send')`. **Distinct finding, adopted into canonical catalog as F-077** (Low · frontend/nav). *(new → adopted as F-077 in companion canonical-ID batch PR; see Section 6 and Section 8 for canonical rows)*
 
 > **Reconciliation policy:** When a follow-up audit pass opens a new canonical ID for items tagged `(new)`, the row is migrated forward and the tagged comment block in this section is updated to point at the new ID. New IDs are expected to land in `F-066+` and `F-071..F-076` should preserve backward-reference to this section so future readers can trace provenance.
 
@@ -661,9 +751,9 @@ The legacy list previously alone at this path was a more recent manual review wi
 |----|-------|--------|-------|
 | _(example)_ | _(example anchor for prior documentary PRs — PR #14 closed issue #1, PR #22 closed #12, PR #23 backend, PR #24 master-index)_ | ✅ Fixed (PR #24 merged) | Documentary PR — not a code fix; historical anchor |
 | F-001..F-005 | _Critical cluster_ | 🟡 Open (ship blockers) | Track with TypeScript / wallet / auth refactor |
-| F-006, F-010, F-014..F-023, F-025, F-027, F-051, F-063 | _High cluster (14 items)_ | 🟡 Open | Next.js auth + feature-flag workstream |
-| F-007, F-009, F-012, F-013, F-016, F-017, F-024, F-026, F-028–F-030, F-032, F-036–F-040, F-046, F-047, F-050, F-055, F-062, F-064 | _Medium cluster (23 items)_ | 🟡 Open | Quality / a11y / hardening workstream |
-| F-008, F-011, F-031, F-033..F-035, F-041..F-045, F-048..F-049, F-052..F-054, F-056..F-061, F-065 | _Low cluster (23 items)_ | 🟡 Open | Polish / formatting / docs workstream |
+| F-006, F-010, F-014..F-023, F-025, F-027, F-051, F-063, F-076 | _High cluster (15 items)_ | 🟡 Open | Next.js auth + feature-flag workstream |
+| F-007, F-009, F-012, F-013, F-016, F-017, F-024, F-026, F-028–F-030, F-032, F-036–F-040, F-046, F-047, F-050, F-055, F-062, F-064, F-066, F-067, F-068, F-071, F-074 | _Medium cluster (28 items)_ | 🟡 Open | Quality / a11y / hardening workstream |
+| F-008, F-011, F-031, F-033..F-035, F-041..F-045, F-048..F-049, F-052..F-054, F-056..F-061, F-065, F-069, F-070, F-072, F-073, F-075, F-077 | _Low cluster (29 items)_ | 🟡 Open | Polish / formatting / docs workstream |
 
 > **Status legend** — 🟢 Trivial/cosmetic · 🟡 Open (tracked) · 🔵 In review · ✅ Fixed (PR linked)
 >
