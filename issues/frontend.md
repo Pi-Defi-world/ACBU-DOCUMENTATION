@@ -266,3 +266,51 @@ Canonical UI/app backlog for `acbu-frontend`. Older list: [../PROJECT/issues/FRO
 **Severity:** Low · **Area:** frontend/security · **Evidence:** `app/layout` / analytics
 **Impact:** Supply-chain risk if external scripts added. **Fix direction:** Prefer first-party hosting; SRI for CDNs. **Acceptance check:** Security review checklist item signed off.
 
+### F-066 — Inconsistent loading / empty state skeletons across pages
+**Severity:** Medium · **Area:** frontend/components · **Evidence:** Per-page `loading.tsx` / `empty.tsx` wrappers across `app/(app)/**`
+**Impact:** Loading and empty states are inconsistent across pages (mix of spinners, dimmed text, blank space). Cognitive load + a maintenance burden, plus a11y regressions (no shared `aria-busy` semantics). **Fix direction:** Introduce a single `<Skeleton>` / `<EmptyState>` shared primitive in `components/ui/`; replace ad-hoc loading/empty wrappers across `app/(app)/**` with this primitive. **Acceptance check:** All `app/(app)/**/loading.tsx` files import the shared `<Skeleton>`; design QA spot-check shows visual consistency across send/home/mint/savings/currency; axe-core reports no missing busy-state violations.
+
+### F-071 — Toast removal delay is ~17 minutes
+**Severity:** Medium · **Area:** frontend/ux · **Evidence:** `acbu-frontend/lib/toast.ts` constant `TOAST_REMOVE_DELAY = 1000000`
+**Impact:** Default toast auto-dismiss is ~17 minutes. Stale toasts pollute the toast log and may display transaction context that should have been cleared (privacy / shoulder-surfer risk in a financial app; trust issue for users who don’t understand why old toasts persist). **Fix direction:** Use a sane default dismiss window (e.g. 5–10 s); gate “sticky” toasts behind an explicit `sticky: true` option for in-progress actions. **Acceptance check:** Default toast auto-dismiss ≤ 10 s under default config; sticky / progress toasts continue to work for genuinely long-running operations (e.g. async Stellar deposit confirmation).
+
+### F-076 — Frontend `request()` helper has no default timeout
+**Severity:** High · **Area:** frontend/api · **Evidence:** `acbu-frontend/lib/api/client.ts` `request()` (uses raw `fetch`, no `AbortController` / timeout)
+**Impact:** Hung requests spin forever; users see indefinite spinners; tabs accumulate fetch pile-up; mobile users hit memory pressure; retries amplify the issue; users may force-close during pending operations, losing state. **Fix direction:** Wrap `request()` with `AbortController` + configurable default timeout (e.g. 30 s); honor caller-supplied `signal` for cancellation; type timeouts as a distinct `RequestTimeoutError`. **Acceptance check:** Network-throttled test surfaces typed timeout error to UI with retry; integration test asserts `request()` aborts after configured deadline even if backend is unreachable.
+
+### F-067 — Contact inputs have no `maxLength`
+**Severity:** Medium · **Area:** frontend/forms · **Evidence:** `acbu-frontend/app/(app)/contacts/**` input fields (xref F-052 baseline)
+**Impact:** Long names/paste content can overflow UI tabs and submission; backend may reject with 400 mid-flow, surfacing confusing errors after submit. CSS overflow hides silently. **Fix direction:** Add `maxLength` per backend schema; show helpful character counter on long fields. **Acceptance check:** Pasting >100 chars is truncated at UI level; backend-aligned limits enforced everywhere; QA confirms no overflow on common pastes.
+
+### F-068 — Profile inputs have no `maxLength` or format validation
+**Severity:** Medium · **Area:** frontend/forms · **Evidence:** `acbu-frontend/app/(app)/me/**` profile fields (bio, display name, contact details)
+**Impact:** Profile text fields ship unconstrained; backend truncates mid-submission with confusing errors. Email / phone / handle fields accept any string, so server-side validation surprises users late. **Fix direction:** Add `maxLength` and format hints per backend schema; inline character counters for long fields; client-side email/phone regex gates. **Acceptance check:** Bio / display name fields enforce limits; invalid email/phone inputs blocked at UI before submit; UAT shows zero-format mismatch errors from backoffice.
+
+### F-069 — Icons recreated each render
+**Severity:** Low · **Area:** frontend/perf · **Evidence:** `acbu-frontend/components/icons/**` declarative component instances
+**Impact:** Every render allocates a fresh icon subtree; unnecessary CPU + memory pressure on low-end devices and slow networks. Lighthouse perf metric stable but uncached. **Fix direction:** Memoize icon components (React.memo + useMemo) or precompute static SVGs as named exports; collapse duplicates. **Acceptance check:** React profiler shows no re-renders of unchanged icons under normal nav; Lighthouse perf unchanged or improved on low-end device QA.
+
+### F-070 — Menu items use `router.push` instead of `Link`
+**Severity:** Low · **Area:** frontend/nav · **Evidence:** `acbu-frontend/components/menu/<MenuItem>.tsx` (and similar) imperatively invoke `router.push(path)`
+**Impact:** Imperative nav breaks browser back-button semantics in some browsers; opens in same tab with no `<a>` accessibility surface (VoiceOver miss); SEO is poor because routes aren't declarative. **Fix direction:** Use Next.js `<Link>` for internal destinations; reserve `router.push` only for code-driven navigation (programmatic post-action). **Acceptance check:** All visible menu items render `<a href>`; browser back button returns to prior menu state; VoiceOver reads destination name.
+
+### F-072 — Mobile detection treats "unknown" as desktop
+**Severity:** Low · **Area:** frontend/compat · **Evidence:** `acbu-frontend/lib/useIsMobile.ts` (or similar) effect
+**Impact:** Unknown browsers / tablets render desktop UI; UX may be poor on devices that could use mobile layout, but desktop default is acceptable trade-off. **Fix direction:** Default to desktop when unknown (preserve current behavior); emit telemetry for fail-open detection so coverage improves over time. **Acceptance check:** Coverage telemetry reports unknown-browser counts in production; visual smoke test passes for desktop Chrome/Safari/Firefox.
+
+### F-073 — Post-KYC upload navigation uses uncleaned `setTimeout`
+**Severity:** Low · **Area:** frontend/hygiene · **Evidence:** `acbu-frontend/app/auth/kyc/**` post-upload flow with `setTimeout(() => navigate(...), 2000)`
+**Impact:** Timer may fire after user has navigated away, causing redundant or confusing state updates / duplicate analytics events. **Fix direction:** Cancel timer on unmount; switch to a fixed-delay UI countdown component rendered inline with a Cancel button; use `useEffect` cleanup. **Acceptance check:** Forced unmount mid-timer does not crash, navigate, or duplicate-fire analytics; Lighthouse / DevTools profile clean.
+
+### F-074 — Silent username normalization on signup
+**Severity:** Medium · **Area:** frontend/auth · **Evidence:** `acbu-frontend/lib/api/auth.ts` lowercases + strips whitespace without warning UI
+**Impact:** Users signing up with mixed-case emails silently land on lowercased versions; phishing-with-typos enrollment does not warn the user; subsequent login confusion when users re-type the form they originally submitted. **Fix direction:** Surface normalization in UI (e.g. “We will store this as: johndoe@example.com”) or refuse ambiguous capitalization with clear copy. **Acceptance check:** Signup flow either (a) rejects mixed-case with copy explaining why, or (b) shows normalized form before submit confirmation; QA verifies both surfaces are accessible (axe-core critical = 0).
+
+### F-075 — Auto-fill heuristic requires length ≥ 56
+**Severity:** Low · **Area:** frontend/ux · **Evidence:** `acbu-frontend/lib/autoFill.ts`
+**Impact:** Short, valid IDs (e.g. <56 char payment references) do not trigger auto-fill; users paste and form is silent, requiring manual selection. **Fix direction:** Multi-mode detection (length, content signature, recent-history) so short valid IDs also auto-fill where appropriate; over-trigger rate must stay bounded. **Acceptance check:** Known short IDs reliably trigger auto-fill in QA fixtures; over-trigger rate <5% in 50-paste regression corpus.
+
+### F-077 — `/p2p` is client-side redirect only
+**Severity:** Low · **Area:** frontend/nav · **Evidence:** `acbu-frontend/app/(app)/p2p/page.tsx` does `useEffect → router.replace('/send')`
+**Impact:** Direct `/p2p` URLs flash a blank page before client-side redirect; SSR/SEO wrong (route exists but content is placeholder); analytics double-count. **Fix direction:** Either rebrand `/p2p` to a server-side route once wired up, or hide from navigation until the P2P feature is launched. **Acceptance check:** Direct `/p2p` URLs either render real content or are gated behind feature flag (no client-side redirect loop); analytics dedupes correctly.
+
